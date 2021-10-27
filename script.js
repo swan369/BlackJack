@@ -1,11 +1,7 @@
 "use strict";
 let players = [];
 let activePlayer = 0;
-let playing = false;
-// let roundFirst = true;
-let userNameRound = false;
 let dealHitStayMode = false;
-// let dealRound = 1;
 let bettingMode = false;
 let multiPlayerMode = false;
 
@@ -14,6 +10,27 @@ const dealBtn = document.querySelector("#deal-button");
 const stayBtn = document.querySelector("#stay-button");
 const hitBtn = document.querySelector("#hit-button");
 const restartBtn = document.querySelector("#restart-button");
+
+// Deal button click --> function
+dealBtn.addEventListener("click", function () {
+  let result = main("d");
+  output.innerHTML = result;
+});
+// Stay button click --> function
+stayBtn.addEventListener("click", function () {
+  let result = main("s");
+  output.innerHTML = result;
+});
+// Hit button click --> function
+hitBtn.addEventListener("click", function () {
+  let result = main("h");
+  output.innerHTML = result;
+});
+// Restart button click --> function
+restartBtn.addEventListener("click", function () {
+  let result = main("");
+  output.innerHTML = result;
+});
 
 // //Create makeDeckF function
 const makeDeck = function () {
@@ -70,7 +87,7 @@ const shuffleDeck = () => {
 // const shuffledCards = shuffleDeck();
 // console.log(shuffledCards);
 
-// create multiplayers that contains *** method called deck () ==> picks card ==> pushes to cardsHeld array ; auto updates playersScore
+// create multiplayers
 const multiPlayerCreate = function (numPlayers) {
   const cardsArray = [];
   let dealerNum = Number(numPlayers) + 1;
@@ -105,13 +122,11 @@ const initGame = function () {
   // players[activePlayer].totalCardValue = [0, 0];
   players = [];
   activePlayer = 0;
-  playing = false;
-  roundFirst = true;
-  userNameRound = false;
-  dealRound = 1;
-  shuffleDeck();
+  dealHitStayMode = false;
+  bettingMode = false;
+  multiPlayerMode = false;
   // console.log(shuffleDeck());
-  multiPlayerCreate(2);
+  // multiPlayerCreate();
 };
 const cashStatus = function (playerCash, playerWin, playerBet) {
   if (playerWin == true) {
@@ -140,20 +155,24 @@ const displayTotalCardValueAllPlayers = function () {
 const drawACardUpdateAndDisplay = function () {
   let shuffledCards = shuffleDeck();
   let cardDrawn = shuffledCards.pop();
-  let cardSuit = cardDrawn.suits;
-  let cardFace = cardDrawn.faces;
+  let cardAceCleared = aceCheck(cardDrawn);
+  let cardSuit = cardAceCleared.suits;
+  let cardFace = cardAceCleared.faces;
   let myOutputValue = "";
   let currentPlayer = players[activePlayer].name;
-  players[activePlayer].cardsHeld.push(cardDrawn);
-  players[activePlayer].totalCardValue += cardDrawn.ranks;
-  myOutputValue = `${currentPlayer} drew ${cardFace} of ${cardSuit}.`;
+  players[activePlayer].cardsHeld.push(cardAceCleared);
+  players[activePlayer].totalCardValue += cardAceCleared.ranks;
+  myOutputValue = `${currentPlayer} drew ${cardFace} of ${cardSuit}.<br/>`;
+  console.log(players[activePlayer].totalCardValue);
   return myOutputValue;
 };
 
 const intermittentCardValueDisplay = function () {
+  let myOutputValue = "";
   let cardPlayer = players[activePlayer].name;
   let cardValue = players[activePlayer].totalCardValue;
-  return `${cardPlayer} total current card value is ${cardValue}`;
+  myOutputValue = `${cardPlayer} total current card value is ${cardValue}.<br/>`;
+  return myOutputValue;
 };
 
 const dealCardsOneRound = function () {
@@ -180,35 +199,15 @@ const dealHitStay = (input) => {
   } else if (input == "h") {
     myOutputValue = drawACardUpdateAndDisplay();
     myOutputValue = myOutputValue + intermittentCardValueDisplay();
-  } else if (input == "s") {
     activePlayer += 1;
-    myOutputValue = `${currentPlayer} chose to stay. Next player.`;
+    `${players[activePlayer].name}, please decide Hit or Stay.`;
+  } else if (input == "s") {
+    myOutputValue = `${currentPlayer} chose to stay.<br/>`;
+    activePlayer += 1;
+    myOutputValue = `${players[activePlayer].name}, please decide to Hit or Stay.`;
   }
   return myOutputValue;
 };
-
-const promptHitOrStay = function () {};
-
-// Deal button click --> function
-dealBtn.addEventListener("click", function () {
-  let result = main("d");
-  output.innerHTML = result;
-});
-// Stay button click --> function
-stayBtn.addEventListener("click", function () {
-  let result = main("s");
-  output.innerHTML = result;
-});
-// Hit button click --> function
-hitBtn.addEventListener("click", function () {
-  let result = main("h");
-  output.innerHTML = result;
-});
-// Restart button click --> function
-restartBtn.addEventListener("click", function () {
-  let result = main("");
-  output.innerHTML = result;
-});
 
 const bettingStoreDisplay = function (betAmt) {
   let myOutputValue = "";
@@ -227,9 +226,38 @@ const betDeductNDisplay = function (betAmt) {
   console.log(currentPlayerObject.cash);
   players[activePlayer].cash -= betAmt;
   let currentPlayerCash = currentPlayerObject.cash;
-  return `${currentPlayerName} has ${currentPlayerCash} left.`;
+  return `${currentPlayerName} has ${currentPlayerCash} dollars left.`;
 };
 
+const aceCheck = function (card) {
+  let cardRank = card.ranks;
+  let nameCard = card.faces;
+  let currentTotalC = players[activePlayer].totalCardValue;
+  let totalWithCard = currentTotalC + cardRank;
+
+  if (nameCard === "ace") {
+    if (totalWithCard >= 21) {
+      card.ranks = 1;
+    } else {
+      card.ranks = 11;
+    }
+  }
+  return card;
+};
+
+const dealerPickCard = function () {
+  let myOutputValue = "";
+  // let dealerArray = [];
+  let i = 1;
+
+  while (players[activePlayer].totalCardValue < 17 && i < 21) {
+    myOutputValue = `${drawACardUpdateAndDisplay()} <br/>`;
+    myOutputValue += `${intermittentCardValueDisplay()}<br/>`;
+    // console.log(myOutputValue);
+    i++;
+  }
+  return myOutputValue + "<br />" + " Dealer has enough.";
+};
 const main = function (input) {
   let myOutputValue = "Error. Invalid response !";
   if (input === "") {
@@ -240,7 +268,7 @@ const main = function (input) {
     multiPlayerCreate(playerNumbers);
     bettingMode = true;
     multiPlayerMode = false;
-    myOutputValue = `Excluding the Dealer, ${playerNumbers} players created. Please input your bets now. Start with Player--0`;
+    myOutputValue = `Excluding the Dealer, ${playerNumbers} players created. Please input your bets now. Start with Player--1.<br/>`;
   } else if (bettingMode === true && activePlayer < players.length - 1) {
     // console.log("was here");
     let bet = input;
@@ -263,6 +291,12 @@ const main = function (input) {
     myOutputValue = dealHitStay(input); //line 172
     console.log(myOutputValue);
     // dealHitStayMode = false;
+    if (activePlayer >= players.length - 1) {
+      myOutputValue += `<br/>All players are done.<br> Dealer's turn.<br><br>`;
+      myOutputValue += dealerPickCard();
+      dealHitStayMode = false;
+      activePlayer = 0;
+    }
   }
 
   // console.log(myOutputValue);
