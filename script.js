@@ -4,6 +4,8 @@ let activePlayer = 0;
 let dealHitStayMode = false;
 let bettingMode = false;
 let multiPlayerMode = false;
+let endGame = false;
+let win = false;
 
 const output = document.querySelector("#output-div");
 const dealBtn = document.querySelector("#deal-button");
@@ -119,14 +121,12 @@ const multiPlayerCreate = function (numPlayers) {
 // console.log(players);
 
 const initGame = function () {
-  // players[activePlayer].totalCardValue = [0, 0];
   players = [];
   activePlayer = 0;
   dealHitStayMode = false;
   bettingMode = false;
   multiPlayerMode = false;
-  // console.log(shuffleDeck());
-  // multiPlayerCreate();
+  win = false;
 };
 const cashStatus = function (playerCash, playerWin, playerBet) {
   if (playerWin == true) {
@@ -247,37 +247,75 @@ const aceCheck = function (card) {
 
 const dealerPickCard = function () {
   let myOutputValue = "";
-  // let dealerArray = [];
   let i = 1;
 
   while (players[activePlayer].totalCardValue < 17 && i < 21) {
     myOutputValue = `${drawACardUpdateAndDisplay()} <br/>`;
     myOutputValue += `${intermittentCardValueDisplay()}<br/>`;
-    // console.log(myOutputValue);
     i++;
   }
-  return myOutputValue + "<br />" + " Dealer has enough.";
+  return myOutputValue + "<br />" + " Dealer has enough.<br/>";
 };
+
+const endGameWinLossLoopCheck = function () {
+  let myOutputValue = "";
+  let totalHand = 0;
+  let dealerTotalHand = 0;
+
+  for (let counter = 0; counter < players.length - 1; counter += 1) {
+    totalHand = players[counter].totalCardValue;
+    dealerTotalHand = players[players.length - 1].totalCardValue;
+    myOutputValue += `${winLossChecker(totalHand, dealerTotalHand)}<br>`;
+  }
+
+  return myOutputValue;
+};
+
+const winLossChecker = function (human, dealer) {
+  let myOutputValue = "";
+  let cleanHuman = Number(human);
+  let cleanDealer = Number(dealer);
+
+  if (cleanHuman === cleanDealer) {
+    myOutputValue = `It is a tie.`;
+  } else if (
+    (cleanHuman <= 21 && cleanHuman > cleanDealer) ||
+    cleanDealer > 21
+  ) {
+    myOutputValue = `You win. Dealer loses.`;
+  } else if (cleanHuman === 21 && cleanDealer !== 21) {
+    myOutputValue = `You have BlackJack. You win. Dealer loses.`;
+  } else {
+    myOutputValue = `You lose. Dealer wins.`;
+  }
+
+  return myOutputValue;
+};
+
 const main = function (input) {
   let myOutputValue = "Error. Invalid response !";
   if (input === "") {
     myOutputValue = `Input number of Players`;
     multiPlayerMode = true;
-  } else if (multiPlayerMode === true) {
+  } else if (
+    multiPlayerMode === true &&
+    Number.isNaN(Number(input)) === false
+  ) {
     let playerNumbers = input;
     multiPlayerCreate(playerNumbers);
     bettingMode = true;
     multiPlayerMode = false;
     myOutputValue = `Excluding the Dealer, ${playerNumbers} players created. Please input your bets now. Start with Player--1.<br/>`;
-  } else if (bettingMode === true && activePlayer < players.length - 1) {
-    // console.log("was here");
+  } else if (
+    bettingMode === true &&
+    activePlayer < players.length - 1 &&
+    Number.isInteger(Number(input))
+  ) {
     let bet = input;
     myOutputValue = bettingStoreDisplay(bet);
     myOutputValue += betDeductNDisplay(bet);
     activePlayer += 1;
-    // console.log(myOutputValue);
     if (activePlayer >= players.length - 1) {
-      // console.log("was here bets done");
       myOutputValue += `<br/>Bets done! Dealing cards now.<br> Click Deal now.`;
       bettingMode = false;
       dealHitStayMode = true;
@@ -290,15 +328,18 @@ const main = function (input) {
     console.log("I went in line 262");
     myOutputValue = dealHitStay(input); //line 172
     console.log(myOutputValue);
-    // dealHitStayMode = false;
     if (activePlayer >= players.length - 1) {
       myOutputValue += `<br/>All players are done.<br> Dealer's turn.<br><br>`;
       myOutputValue += dealerPickCard();
       dealHitStayMode = false;
       activePlayer = 0;
+      endGame = true;
     }
   }
+  if (endGame === true) {
+    myOutputValue += endGameWinLossLoopCheck();
+    endGame = false;
+  }
 
-  // console.log(myOutputValue);
   return myOutputValue;
 };
