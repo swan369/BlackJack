@@ -2,6 +2,7 @@
 let players = [];
 let activePlayer = 0;
 let dealHitStayMode = false;
+let hitStay = false;
 let bettingMode = false;
 let multiPlayerMode = false;
 let endGame = false;
@@ -126,7 +127,9 @@ const initGame = function () {
   dealHitStayMode = false;
   bettingMode = false;
   multiPlayerMode = false;
+  hitStay = false;
   win = false;
+  endGame = false;
 };
 const cashStatus = function (playerCash, playerWin, playerBet) {
   if (playerWin == true) {
@@ -190,18 +193,20 @@ const dealCardsOneRound = function () {
 
 const dealHitStay = (input) => {
   let currentPlayer = players[activePlayer].name;
-  let myOutputValue = "";
-  if (input == "d") {
+  let myOutputValue = "Error !. Invalid click.";
+
+  if (input === "d" && hitStay === false) {
     myOutputValue = dealCardsOneRound();
     myOutputValue += "<br/>";
     myOutputValue += dealCardsOneRound();
     myOutputValue += `<br/>Player 1, Hit or Stay ?`;
-  } else if (input == "h") {
+    hitStay = true;
+  } else if (input === "h" && hitStay === true) {
     myOutputValue = drawACardUpdateAndDisplay();
     myOutputValue = myOutputValue + intermittentCardValueDisplay();
     activePlayer += 1;
     `${players[activePlayer].name}, please decide Hit or Stay.`;
-  } else if (input == "s") {
+  } else if (input === "s" && hitStay === true) {
     myOutputValue = `${currentPlayer} chose to stay.<br/>`;
     activePlayer += 1;
     myOutputValue = `${players[activePlayer].name}, please decide to Hit or Stay.`;
@@ -254,7 +259,7 @@ const dealerPickCard = function () {
     myOutputValue += `${intermittentCardValueDisplay()}<br/>`;
     i++;
   }
-  return myOutputValue + "<br />" + " Dealer has enough.<br/>";
+  return myOutputValue + "<br />" + " Dealer has enough cards.<br/>";
 };
 
 const endGameWinLossLoopCheck = function () {
@@ -305,7 +310,7 @@ const main = function (input) {
     multiPlayerCreate(playerNumbers);
     bettingMode = true;
     multiPlayerMode = false;
-    myOutputValue = `Excluding the Dealer, ${playerNumbers} players created. Please input your bets now. Start with Player--1.<br/>`;
+    myOutputValue = `Excluding the Dealer, ${playerNumbers} players were created.<br> Please input your bets now.<br>Start with Player--1.<br/>`;
   } else if (
     bettingMode === true &&
     activePlayer < players.length - 1 &&
