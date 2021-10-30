@@ -8,8 +8,8 @@ let hitStay = false;
 let hitStayRound = 1;
 let dealerTurn = false;
 let endGame = false;
-let win = false;
 let playingContinue = false;
+let continueMode = true;
 
 const output = document.querySelector("#output-div");
 const dealBtn = document.querySelector("#deal-button");
@@ -129,12 +129,15 @@ const multiPlayerCreate = function (numPlayers) {
 const initGame = function () {
   players = [];
   activePlayer = 0;
-  dealHitStayMode = false;
-  bettingMode = false;
   multiPlayerMode = false;
+  bettingMode = false;
+  dealHitStayMode = false;
   hitStay = false;
-  win = "lose";
+  hitStayRound = 1;
+  dealerTurn = false;
   endGame = false;
+  // win = false;
+  playingContinue = false;
 };
 
 const displayTotalCardValueAllPlayers = function () {
@@ -211,7 +214,6 @@ const winLossChecker = function () {
   let cleanHuman = players[activePlayer].totalCardValue;
   // let cleanDealer = 8;
   let cleanDealer = players[players.length - 1].totalCardValue;
-  // let winnerStatus = players[activePlayer].win;
 
   // round: find players/dealer with Blackjack --> playing = false
   if (hitStay === false) {
@@ -418,7 +420,9 @@ const aceCheck = function (card) {
 };
 
 const dealerPickCard = function () {
-  let myOutputValue = "";
+  let myOutputValue = `Dealer's total hand ${
+    players[players.length - 1].totalCardValue
+  }<br>`;
   let i = 1;
 
   while (players[activePlayer].totalCardValue < 17 && i < 21) {
@@ -426,7 +430,7 @@ const dealerPickCard = function () {
     myOutputValue += `${intermittentCardValueDisplay()}<br/>`;
     i++;
     if (players[activePlayer].totalCardValue > 21) {
-      myOutputValue += `Dealer died/lose.`;
+      myOutputValue += `Dealer died/lose.<br>`;
     } else {
       myOutputValue += `Dealer has enough cards. Total hand ${
         players[players.length - 1].totalCardValue
@@ -448,12 +452,10 @@ const endGameWinLossLoopCheck = function () {
 };
 
 const payOut = function () {
-  let myOutputValue = "Not working PayOut";
+  let myOutputValue = "";
   console.log(players[activePlayer].win);
   console.log(players[activePlayer].name);
   for (let i = 0; i < players.length - 1; i++) {
-    // let player = players[i].name;
-    // let winning = players[i].win;
     let betAmt = Number(players[i].bet);
     console.log(players[activePlayer].name);
     if (players[i].win === "win") {
@@ -486,7 +488,16 @@ const payOut = function () {
   }
   return myOutputValue;
 };
-
+const gameContinue = function () {
+  activePlayer = 0;
+  bettingMode = false;
+  dealHitStayMode = false;
+  hitStay = false;
+  dealerTurn = false;
+  endGame = false;
+  playingContinue = false;
+  continueMode = false;
+};
 const main = function (input) {
   let myOutputValue = "Error. Invalid response !";
   if (input === "") {
@@ -502,7 +513,28 @@ const main = function (input) {
     multiPlayerMode = false;
     bettingMode = true;
     myOutputValue = `Excluding the Dealer, ${playerNumbers} players were created.<br> Please input your bets now.<br>Start with Player--1.<br/>`;
-  } else if (
+  }
+  // to configure later. continue mode of game.
+  // else if (
+  //   continueMode === true &&
+  //   input === "d"
+  //   ) {
+  //   myOutputValue = `Input your bets starting from ${players[activePlayer].name}`;
+  //   if (Number.isInteger(Number(input))) {
+  //     bet = Number(input);
+  //     myOutputValue = bettingStoreDisplay(bet);
+  //     myOutputValue += betDeductNDisplay(bet);
+  //     activePlayer += 1;
+
+  //     if (activePlayer >= players.length - 1) {
+  //       myOutputValue += `<br/>Bets done! Dealing cards now.<br> Click Deal now.`;
+  //       bettingMode = false;
+  //       dealHitStayMode = true;
+  //       activePlayer = 0;
+  //     }
+  //   }
+  // }
+  else if (
     bettingMode === true &&
     activePlayer < players.length - 1 &&
     Number.isInteger(Number(input))
@@ -525,15 +557,9 @@ const main = function (input) {
     myOutputValue = dealHitStay(input); //line 172
     playingLoopCheck();
 
-    // hitStay = true;
-    // time to choose hit or stay
-    // if (hitStay === true && players[activePlayer].playing === true) {
-    //   dealHitStay(input);
-    // }
-
     // Dealer to pick cards
     if (playingContinue && activePlayer >= players.length - 1) {
-      myOutputValue += `<br/>All players are done.<br> Dealer's turn.<br><br>`;
+      myOutputValue += `<br/>All players are done.<br> Dealer's turn.<br>`;
       myOutputValue += dealerPickCard();
       console.log(myOutputValue);
       dealHitStayMode = false;
@@ -558,10 +584,11 @@ const main = function (input) {
     console.log(players[1].bet);
     console.log(players[1].cash);
     console.log(players[players.length - 1].cash);
+    activePlayer = 0;
+    myOutputValue += `<br>restart by clicking Restart or Submit.`;
 
-    myOutputValue += `<br>Do you wish to continue, click Deal or else, restart by clicking Restart or Submit.`;
-    endGame = false;
-    // dealHitStayMode = true;
+    // gameContinue();
+
     console.log(activePlayer);
   }
 
